@@ -1,0 +1,16 @@
+# 核心 AI SDK
+openai>=1.30.3
+anthropic>=0.26.1
+google-generativeai>=0.8.3
+groq>=0.8.0
+
+# 基础底层依赖 (解决你遇到的 ModuleNotFoundError 和 Dependency Conflicts)
+annotated-types>=0.6.0
+pydantic>=2.7.0
+distro>=1.7.0
+tqdm>=4.66.0
+
+# 常用辅助库
+python-dotenv>=1.0.1
+requests>=2.31.0
+pathlib>=1.0.1
