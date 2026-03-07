@@ -164,7 +164,7 @@ class OutlineGenerator:
 
 请直接返回改进后的完整大纲，保持原有的四部分结构。不需要输出改进说明或注释。"""
         
-        improved_outline = self.ai_client.generate_text(prompt, max_tokens=5000)
+        improved_outline = self.ai_client.generate_text(prompt, max_tokens=20000)
         
         if not improved_outline:
             return outline  # 返回原大纲而不中断

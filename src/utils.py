@@ -4,6 +4,7 @@
 
 import os
 import json
+import re
 from pathlib import Path
 from typing import Optional
 import requests
@@ -67,6 +68,9 @@ class AIClient:
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json"
         }
+        # 优化：使用 Session 复用底层 TCP 连接
+        self.session = requests.Session()
+        self.session.headers.update(self.headers)
     
     def call_api(self, messages: list, temperature: float = 0.7, max_tokens: int = 5000) -> str:
         """调用API"""
@@ -83,13 +87,12 @@ class AIClient:
                 "max_tokens": max_tokens
             }
                  
-            response = requests.post(
+            # 优化：使用 self.session 替代 requests.post
+            response = self.session.post(
                 f"{self.base_url}/chat/completions",
-                headers=self.headers,
                 json=payload,
-                timeout=120
+                timeout=180
             )
-            
             if response.status_code == 200:
                 result = response.json()
                 return result['choices'][0]['message']['content'].strip()
@@ -111,33 +114,7 @@ class AIClient:
         messages.append({"role": "user", "content": prompt})
         
         return self.call_api(messages, **kwargs)
-    
-    def evaluate_text(self, text: str, criteria: str) -> dict:
-        """评估文本质量"""
-        prompt = f"""请根据以下评估标准对文本进行评估：
 
-评估标准：
-{criteria}
-
-待评估文本：
-{text}
-
-请以JSON格式返回评估结果，包含：
-- is_qualified: 是否通过（true/false）
-- scores: 各项评分（0-10）
-- issues: 问题列表
-- suggestions: 改进建议
-"""
-        result_text = self.generate_text(prompt)
-        try:
-            return json.loads(result_text)
-        except:
-            return {
-                "is_qualified": False,
-                "scores": {},
-                "issues": ["无法解析评估结果"],
-                "suggestions": []
-            }
 
 
 class Logger:

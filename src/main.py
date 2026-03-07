@@ -306,8 +306,15 @@ def main():
         "--stage", "-s",
         type=int,
         choices=[1, 2, 3],
-        default=1,
-        help="执行的阶段（1=大纲，2=创作，3=发布，默认执行全部）"
+        default=None,
+        help="执行的阶段（1=仅大纲，2=仅创作，3=仅发布。不指定则执行全部）"
+    )
+    
+    parser.add_argument(
+        "--book-folder", "-bf",
+        type=str,
+        default=None,
+        help="指定书籍文件夹路径，用于跳过阶段1直接进行阶段2创作（需配合 -s 2 使用）"
     )
     
     parser.add_argument(
@@ -352,6 +359,62 @@ def main():
         agent.check_status(args.check)
         return
     
+    # 书籍文件夹模式（直接跳到阶段2）
+    if args.book_folder:
+        from pathlib import Path
+        from config import get_book_subdirs
+        
+        book_folder = Path(args.book_folder)
+        if not book_folder.exists():
+            Logger.log(f"✗ 书籍文件夹不存在: {book_folder}", "ERROR")
+            return
+        
+        # 读取大纲文件
+        subdirs = get_book_subdirs(book_folder)
+        
+        # 尝试读取 master_outline.txt 或 outline.txt
+        outline_dir = Path(subdirs['outline'])
+        outline_file = outline_dir / 'master_outline.txt'
+        
+        if not outline_file.exists():
+            outline_file = outline_dir / 'outline.txt'
+        
+        if not outline_file.exists():
+            Logger.log(f"✗ 大纲文件不存在", "ERROR")
+            Logger.log(f"请在 {outline_dir} 目录下创建 master_outline.txt 或 outline.txt 文件", "WARNING")
+            return
+        # 读取大纲内容
+        try:
+            with open(outline_file, 'r', encoding='utf-8') as f:
+                outline = f.read()
+            
+            Logger.log(f"✓ 已读取大纲文件: {outline_file}")
+            Logger.log(f"✓ 书籍文件夹: {book_folder}")
+            
+            # 直接运行阶段2
+            if args.stage is None:
+                args.stage = 2  # 默认运行阶段2
+            
+            if args.stage == 2:
+                Logger.log("\n" + "="*60)
+                Logger.log("阶段二：章节迭代创作")
+                Logger.log("="*60)
+                
+                from stage2_chapter import run_stage2
+                stage2_result = run_stage2(str(book_folder), outline, chapters_count=args.chapters, start_from=1)
+                
+                if stage2_result.get("success"):
+                    Logger.log(f"\n✓ 阶段二完成")
+                    Logger.log(f"已生成章节数: {stage2_result['chapters_generated']}")
+                    Logger.log(f"最终章节: 第 {stage2_result.get('final_chapter', '未知')} 章")
+                else:
+                    Logger.log("阶段二失败", "ERROR")
+            
+        except Exception as e:
+            Logger.log(f"✗ 读取大纲失败: {e}", "ERROR")
+        
+        return
+    
     # 恢复模式
     if args.resume:
         agent.continue_writing(args.resume, args.start_chapter, args.chapters)
@@ -364,10 +427,12 @@ def main():
         print('  python main.py --theme "网络文学主题" --chapters 10')
         print('  python main.py -t "悬疑推理小说" -n "密室谜案" -c 20')
         print('  python main.py --theme-file theme/my_theme.txt -c 10')
+        print('  python main.py --book-folder book/书籍名 -s 2  # 用现有大纲创作')
         print('  python main.py --list-themes')
         return
     
     agent.run_full_pipeline(theme, args.name, args.chapters, target_stage=args.stage)
+
 
 
 if __name__ == "__main__":
