@@ -237,18 +237,11 @@ class ChapterGenerator:
             title = f"第 {chapter_num} 章"
         
         return title, content
+    
     def check_chapter_quality(self, chapter_num: int, chapter_content: str) -> dict:
         """
         质量审计：检查章节质量
-        
-        Args:
-            chapter_num: 章节编号
-            chapter_content: 章节内容
-        
-        Returns:
-            检查结果字典
         """
-        
         check_specs = """检查以下方面：
                         1. 字数：必须3000字以上（不合格如果少于3000字），尽量5000字以内，超过扣分
                         2. 与大纲的符合度
@@ -273,7 +266,7 @@ class ChapterGenerator:
                 - issues: 主要问题列表（数组，如字数不足要明确指出）
                 - suggestions: 改进建议列表（数组）
                 例如：
-                {"is_qualified": false,
+                {{"is_qualified": false,
                 "score": 85,
                 "issues": [
                     "字数不足3000字（当前字数：2800字）",
@@ -282,9 +275,9 @@ class ChapterGenerator:
                 "suggestions": [
                     "扩充内容至3000字以上，补充具体案例支撑观点",
                     "优化段落过渡语句，提升内容连贯性"
-                ]}
+                ]}}
                 或
-                                {
+                                {{
                 "is_qualified": true,
                 "score": 88,
                 "issues": [
@@ -293,12 +286,11 @@ class ChapterGenerator:
                 "suggestions": [
                     "可适当精简冗余表述，提升内容紧凑度",
                     "补充1-2个最新案例，增强时效性"
-                ]}
+                ]}}
                 
                 如果评分低于70分或字数不足，请标记为不合格。"""
                 
         raw_response = self.ai_client.generate_text(prompt, check_specs)
-        
         # 尝试解析 JSON
         try:
             # 步骤1：提取AI返回中的JSON内容（兼容多种格式）
@@ -398,7 +390,7 @@ class ChapterGenerator:
             是否保存成功
         """
         # 格式化输出：标题 + 正文
-        formatted_content = f"第 {chapter_num} 章 {title}\n\n{chapter_content}"
+        formatted_content = f"{title}\n\n{chapter_content}"
         
         filepath = self.chapters_dir / f"Chapter_{chapter_num}.txt"
         success = self.file_manager.write_file(str(filepath), formatted_content)

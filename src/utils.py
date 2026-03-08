@@ -91,7 +91,7 @@ class AIClient:
             response = self.session.post(
                 f"{self.base_url}/chat/completions",
                 json=payload,
-                timeout=180
+                timeout=360
             )
             if response.status_code == 200:
                 result = response.json()

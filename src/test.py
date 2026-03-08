@@ -19,7 +19,7 @@ client = OpenAI(
 
 def call_llm(prompt: str = "详细提示词", system_prompt: str = "背景提示词") -> str:
     response = client.chat.completions.create(
-        model="glm-4-flash", 
+        model="glm-4.6v-flashx", 
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": prompt}

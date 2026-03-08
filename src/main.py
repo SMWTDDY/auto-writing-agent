@@ -162,6 +162,7 @@ class AutoWritingAgent:
             if target_stage == 2:
                 return True
             
+            
             # 阶段三：发布
             if target_stage is None or target_stage == 3:
                 Logger.log("\n" + "="*60)
